@@ -159,6 +159,7 @@ app.post('/webhook', async (req, res) => {
                         const comprobante = {
                             "operacion": "generar_comprobante", "tipo_de_comprobante": tipoDoc === 'factura' ? "1" : "2",
                             "serie": tipoDoc === 'factura' ? "FFF1" : "BBB1", 
+                            "codigo_unico": "WSP-" + Date.now(),
                             "sunat_transaction": "1", "cliente_tipo_de_documento": tipoDoc === 'factura' ? "6" : "1",
                             "cliente_numero_de_documento": sesiones[numeroUsuario].documento,
                             "cliente_denominacion": sesiones[numeroUsuario].nombreCliente, "cliente_direccion": "Lima",
