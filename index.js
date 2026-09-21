@@ -95,7 +95,7 @@ app.post('/webhook', async (req, res) => {
                     {"valido": true, "items": [{"descripcion": "Nombre", "cantidad": 1, "precio_unitario": 0.00}]}
                     NO agregues saludos ni explicaciones, SOLO devuelve el JSON. Si es un texto sin sentido, pon "valido": false.
                     `;
-                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
                     const result = await model.generateContent(prompt);
                     
                     // Extraer solo el bloque JSON de forma ultra segura
