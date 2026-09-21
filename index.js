@@ -98,12 +98,17 @@ app.post('/webhook', async (req, res) => {
                     const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
                     const result = await model.generateContent(prompt);
                     
-                    // Extraer solo el bloque JSON por si la IA añade texto extra (markdown o saludos)
+                    // Extraer solo el bloque JSON de forma ultra segura
                     const textoLimpiado = result.response.text();
-                    const jsonMatch = textoLimpiado.match(/\{[\s\S]*\}/);
-                    if (!jsonMatch) throw new Error("La IA no devolvió un JSON válido.");
+                    const primerLlave = textoLimpiado.indexOf('{');
+                    const ultimaLlave = textoLimpiado.lastIndexOf('}');
                     
-                    const datosIA = JSON.parse(jsonMatch[0]);
+                    if (primerLlave === -1 || ultimaLlave === -1) {
+                        throw new Error("La IA no devolvió el formato esperado.");
+                    }
+                    
+                    const jsonString = textoLimpiado.substring(primerLlave, ultimaLlave + 1);
+                    const datosIA = JSON.parse(jsonString);
 
                     if (!datosIA.valido || !datosIA.items || datosIA.items.length === 0) {
                         return enviarMensajeMeta(numeroUsuario, `😕 No pude entender bien los productos. ¿Podrías ser más claro?`);
@@ -135,7 +140,7 @@ app.post('/webhook', async (req, res) => {
                     await enviarMensajeMeta(numeroUsuario, mensajeConfirmacion);
                 } catch (error) {
                     console.error("🔥 ERROR EN GEMINI:", error);
-                    await enviarMensajeMeta(numeroUsuario, `❌ Hubo un error procesando el pedido con IA. Intenta de nuevo.`);
+                    await enviarMensajeMeta(numeroUsuario, `❌ ERROR IA: ${error.message}\n(Por favor captura pantalla de esto)`);
                 }
             }
             else if (estadoActual === 'ESPERANDO_CONFIRMACION') {
