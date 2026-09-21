@@ -87,12 +87,13 @@ app.post('/webhook', async (req, res) => {
                 await enviarMensajeMeta(numeroUsuario, `🧠 Analizando los productos...`);
                 try {
                     const prompt = `
-                    Eres un asistente de facturación en Perú. Analiza este texto del cliente: "${mensajeRecibido}".
-                    Extrae CADA producto por separado con su cantidad y su precio unitario.
-                    Si el cliente da el precio "total" de un producto, divídelo entre la cantidad para sacar el "precio_unitario".
-                    Responde ÚNICAMENTE con un objeto JSON con este formato exacto:
+                    Eres un asistente de facturación. Analiza este pedido del cliente: "${mensajeRecibido}".
+                    Regla estricta: El cliente siempre escribe en el formato "Cantidad Producto Precio_Unitario". 
+                    Ejemplo: Si dice "4 pan 0.5", significa 4 panes a 0.50 CADA UNO (el precio unitario es 0.5).
+                    ASUME SIEMPRE que el número final de un producto es su PRECIO UNITARIO, nunca el precio total.
+                    Extrae cada producto por separado y responde ÚNICAMENTE con un objeto JSON con este formato exacto:
                     {"valido": true, "items": [{"descripcion": "Nombre", "cantidad": 1, "precio_unitario": 0.00}]}
-                    Si es un texto sin sentido de compra, pon "valido": false.
+                    Si es un texto sin sentido, pon "valido": false.
                     `;
                     const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
                     const result = await model.generateContent(prompt);
