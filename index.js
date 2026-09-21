@@ -91,13 +91,19 @@ app.post('/webhook', async (req, res) => {
                     Regla estricta: El cliente siempre escribe en el formato "Cantidad Producto Precio_Unitario". 
                     Ejemplo: Si dice "4 pan 0.5", significa 4 panes a 0.50 CADA UNO (el precio unitario es 0.5).
                     ASUME SIEMPRE que el número final de un producto es su PRECIO UNITARIO, nunca el precio total.
-                    Extrae cada producto por separado y responde ÚNICAMENTE con un objeto JSON con este formato exacto:
+                    Extrae cada producto por separado y responde EXCLUSIVAMENTE con un objeto JSON válido con este formato exacto:
                     {"valido": true, "items": [{"descripcion": "Nombre", "cantidad": 1, "precio_unitario": 0.00}]}
-                    Si es un texto sin sentido, pon "valido": false.
+                    NO agregues saludos ni explicaciones, SOLO devuelve el JSON. Si es un texto sin sentido, pon "valido": false.
                     `;
                     const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
                     const result = await model.generateContent(prompt);
-                    const datosIA = JSON.parse(result.response.text().replace(/```json/g, '').replace(/```/g, '').trim());
+                    
+                    // Extraer solo el bloque JSON por si la IA añade texto extra (markdown o saludos)
+                    const textoLimpiado = result.response.text();
+                    const jsonMatch = textoLimpiado.match(/\{[\s\S]*\}/);
+                    if (!jsonMatch) throw new Error("La IA no devolvió un JSON válido.");
+                    
+                    const datosIA = JSON.parse(jsonMatch[0]);
 
                     if (!datosIA.valido || !datosIA.items || datosIA.items.length === 0) {
                         return enviarMensajeMeta(numeroUsuario, `😕 No pude entender bien los productos. ¿Podrías ser más claro?`);
