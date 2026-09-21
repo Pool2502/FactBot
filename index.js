@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const Groq = require("groq-sdk");
 
 const app = express();
 app.use(bodyParser.json());
@@ -14,7 +14,7 @@ const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 
 const NUBEFACT_URL = process.env.NUBEFACT_URL;
 const NUBEFACT_TOKEN = process.env.NUBEFACT_TOKEN;
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); 
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY }); 
 
 const sesiones = {};
 
@@ -95,11 +95,14 @@ app.post('/webhook', async (req, res) => {
                     {"valido": true, "items": [{"descripcion": "Nombre", "cantidad": 1, "precio_unitario": 0.00}]}
                     NO agregues saludos ni explicaciones, SOLO devuelve el JSON. Si es un texto sin sentido, pon "valido": false.
                     `;
-                    const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
-                    const result = await model.generateContent(prompt);
+                    const result = await groq.chat.completions.create({
+                        messages: [{ role: "user", content: prompt }],
+                        model: "llama-3.1-8b-instant",
+                        temperature: 0,
+                    });
                     
                     // Extraer solo el bloque JSON de forma ultra segura
-                    const textoLimpiado = result.response.text();
+                    const textoLimpiado = result.choices[0].message.content;
                     const primerLlave = textoLimpiado.indexOf('{');
                     const ultimaLlave = textoLimpiado.lastIndexOf('}');
                     
