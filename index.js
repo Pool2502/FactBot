@@ -163,7 +163,9 @@ app.post('/webhook', async (req, res) => {
                         sesiones[numeroUsuario].estado = 'INICIO'; 
                         await enviarMensajeMeta(numeroUsuario, `🎉 ¡Comprobante generado!\n${respuestaNube.data.enlace_del_pdf}`);
                     } catch (error) {
-                        await enviarMensajeMeta(numeroUsuario, `❌ SUNAT rechazó el comprobante. Intenta empezar de nuevo enviando 'factura'.`);
+                        const motivo = error.response && error.response.data && error.response.data.errors ? error.response.data.errors : error.message;
+                        console.error("🔥 ERROR NUBEFACT:", motivo);
+                        await enviarMensajeMeta(numeroUsuario, `❌ SUNAT rechazó el comprobante.\nMotivo: ${motivo}\n\nIntenta empezar de nuevo enviando 'factura'.`);
                         sesiones[numeroUsuario].estado = 'INICIO';
                     }
                 } 
